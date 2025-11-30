@@ -1,73 +1,114 @@
-# React + TypeScript + Vite
+# CET-6 Recorder (Web App)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Github Pages：https://vasantlong.github.io/cet6-recorder/
 
-Currently, two official plugins are available:
+An elegant, single-page application (SPA) designed to help students prepare for the **CET-6 (College English Test Band 6)**. It offers strict scoring algorithms, granular time tracking, and insightful performance analytics.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Key Features
 
-## React Compiler
+- **Smart Scoring Engine**: Automatically calculates scores based on the official CET-6 weighting logic:
+  - **Listening (35%)**: Granular support for Long Conversations, Passages, and Lectures.
+  - **Reading (35%)**: Dedicated inputs for Banked Cloze, Matching, and Careful Reading.
+  - **Writing & Translation (15% each)**: Standard score conversion (e.g., input 12/15 -> converted score).
+- **Granular Practice Tracking**:
+  - Track full mock exams or specific drills (e.g., "Just Reading Passage 1").
+  - **Section Timer**: Log time for specific sections (e.g., 15 mins for Careful Reading) which auto-syncs to your score entry.
+  - **Attempt Tracking**: Distinguishes between "Skipped" sections and "Failed" (0 score) sections for accurate average calculations.
+- **Visual Analytics**:
+  - **Dashboard**: View Total Sessions, Best Score, and Normalized Averages.
+  - **Drill Performance**: See your specific strength in granular areas (e.g., matching vs. cloze).
+  - **Trends Chart**: Dual-axis chart visualizing Score vs. Duration over time.
+- **Data Management**:
+  - **Local Storage** persistence (offline capable).
+  - Export history to **CSV** for Excel analysis.
+  - Data privacy (no server upload).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠 Tech Stack
 
-## Expanding the ESLint configuration
+- **Framework**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **Charting**: Recharts
+- **Icons/Fonts**: Inter Font
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📦 Installation & Setup
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. **Clone the repository**:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+   ```bash
+   git clone https://github.com/<your-username>/cet6-recorder.git
+   cd cet6-recorder
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+2. **Install dependencies**:
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+   ```bash
+   npm install
+   ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+3. **Run development server**:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+   ```bash
+   npm run dev
+   ```
+
+   Open http://localhost:5173 in your browser.
+
+4. **Build for production**:
+
+   ```bash
+   npm run build
+   ```
+
+## 🚢 Deployment (GitHub Pages)
+
+This project is configured for easy deployment to GitHub Pages.
+
+1. Update vite.config.ts:
+
+   ```typescript
+   export default defineConfig({
+     base: "/cet6-recorder/", // Replace with your repo name
+     plugins: [react()],
+   });
+   ```
+
+2. Run the deploy script:
+
+   ```bash
+   npm run deploy
+   ```
+
+## 🧩 Usage Guide
+
+### Practice Mode
+
+1. **Timer**: Select a target section (e.g., "Reading - Careful 1") and start the timer. When finished, click **"Log & Reset"** to send the time to the form.
+2. **Score Entry**:
+   - Toggle the **circle button** next to a section to mark it as "Attempted".
+   - Enter your correct answer count (or standard score for Writing/Trans).
+   - **Validation**: Active sections must have a valid time (except Listening). Zero scores require confirmation.
+3. **Save**: Click "Save Record" to calculate your total and save to history.
+
+### Statistics Mode
+
+1. **Dashboard**: View normalized averages. For example, if you only did 1 reading passage, the score is scaled to represent a full section equivalent for accurate averaging.
+2. **Chart**: Use the dropdown to switch metrics (e.g., view only "Writing" trends).
+3. **Manage**: Export data to CSV or clear history.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please fork the repository and submit a pull request.
+
+## 📄 License
+
+See the [LICENSE](LICENSE) file for details.
+
+## TODO
+
+- [ ] !! Clear alert messages after user interaction.
+- [ ] Improve the UI/UX for better user interaction.
+- [ ] Add dark mode support.
+- [ ] Optimize performance for mobile devices.
+- [ ] Implement user authentication for cloud storage options.
+- [ ] Integrate with third-party APIs for additional resources.
