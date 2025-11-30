@@ -1,9 +1,8 @@
+import type { PracticeRecord } from "../types";
 
-import { PracticeRecord } from '../types';
+const STORAGE_KEY = "cet6_practice_records";
 
-const STORAGE_KEY = 'cet6_practice_records';
-
-export const STORAGE_EVENT = 'cet6_storage_update';
+export const STORAGE_EVENT = "cet6_storage_update";
 
 export const getRecords = (): PracticeRecord[] => {
   try {
