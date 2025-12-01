@@ -11,13 +11,15 @@ const StatCard: React.FC<{
   value: string | number;
   subtext?: string;
   color?: string;
-}> = ({ title, value, subtext, color = "text-gray-900" }) => (
-  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-start justify-between">
-    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+}> = ({ title, value, subtext, color = "text-gray-900 dark:text-white" }) => (
+  <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col items-start justify-between transition-colors">
+    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
       {title}
     </h3>
     <div className={`text-3xl font-bold ${color}`}>{value}</div>
-    {subtext && <p className="text-xs text-gray-400 mt-2">{subtext}</p>}
+    {subtext && (
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{subtext}</p>
+    )}
   </div>
 );
 
@@ -26,11 +28,13 @@ const SectionStat: React.FC<{
   value: number;
   unit?: string;
 }> = ({ label, value, unit = "pts" }) => (
-  <div className="flex justify-between items-center text-sm py-2 border-b border-gray-50 last:border-0">
-    <span className="text-gray-600">{label}</span>
-    <span className="font-semibold text-gray-900">
+  <div className="flex justify-between items-center text-sm py-2 border-b border-gray-50 dark:border-gray-700 last:border-0">
+    <span className="text-gray-600 dark:text-gray-400">{label}</span>
+    <span className="font-semibold text-gray-900 dark:text-gray-200">
       {value > 0 ? value.toFixed(1) : "-"}{" "}
-      <span className="text-xs text-gray-400 font-normal">{unit}</span>
+      <span className="text-xs text-gray-400 dark:text-gray-500 font-normal">
+        {unit}
+      </span>
     </span>
   </div>
 );
@@ -262,13 +266,13 @@ const Dashboard: React.FC<DashboardProps> = ({ records }) => {
         <StatCard
           title="Best Full Score"
           value={stats.maxScore.toFixed(1)}
-          color="text-emerald-600"
+          color="text-emerald-600 dark:text-emerald-400"
           subtext="Full mock exams only"
         />
         <StatCard
           title="Latest Activity"
           value={stats.lastScore.toFixed(1)}
-          color="text-indigo-600"
+          color="text-indigo-600 dark:text-indigo-400"
           subtext={
             stats.lastType
               ? stats.lastType.length > 20
@@ -285,14 +289,14 @@ const Dashboard: React.FC<DashboardProps> = ({ records }) => {
       </div>
 
       {/* Drill Performance Breakdown */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-        <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-4 flex items-center">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5 transition-colors">
+        <h4 className="text-sm font-bold text-gray-800 dark:text-gray-100 uppercase tracking-wide mb-4 flex items-center">
           <span className="w-1.5 h-4 bg-amber-500 rounded-full mr-2"></span>
           Drill Performance (Normalized Avg)
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-4">
           <div>
-            <h5 className="text-xs font-semibold text-blue-600 mb-2">
+            <h5 className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2">
               Listening
             </h5>
             <SectionStat
@@ -303,7 +307,7 @@ const Dashboard: React.FC<DashboardProps> = ({ records }) => {
             <SectionStat label="Lectures" value={stats.granular.l_lect} />
           </div>
           <div>
-            <h5 className="text-xs font-semibold text-emerald-600 mb-2">
+            <h5 className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-2">
               Reading
             </h5>
             <SectionStat label="Banked Cloze" value={stats.granular.r_banked} />
@@ -314,13 +318,13 @@ const Dashboard: React.FC<DashboardProps> = ({ records }) => {
             />
           </div>
           <div>
-            <h5 className="text-xs font-semibold text-amber-600 mb-2">
+            <h5 className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-2">
               Writing & Trans
             </h5>
             <SectionStat label="Writing" value={stats.granular.write} />
             <SectionStat label="Translation" value={stats.granular.trans} />
           </div>
-          <div className="bg-gray-50 rounded-lg p-3 flex flex-col justify-center text-xs text-gray-500 italic">
+          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 flex flex-col justify-center text-xs text-gray-500 dark:text-gray-400 italic">
             "Averages are normalized. Partial attempts (e.g. 1 passage) are
             scaled to represent a full section score."
           </div>

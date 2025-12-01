@@ -50,7 +50,7 @@ const RowInput: React.FC<{
   isActive,
   onToggle,
 }) => (
-  <div className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+  <div className="flex items-center gap-3 py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
     <div className="w-32 flex-shrink-0 flex items-center gap-2">
       {isToggleable && (
         <button
@@ -59,7 +59,7 @@ const RowInput: React.FC<{
           className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all flex-shrink-0 ${
             isActive
               ? "bg-green-500 border-green-600 shadow-sm"
-              : "bg-white border-gray-300 hover:border-gray-400"
+              : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-500 hover:border-gray-400 dark:hover:border-gray-400"
           }`}
           title={isActive ? "Included in score" : "Skipped / Not attempted"}
         >
@@ -69,12 +69,16 @@ const RowInput: React.FC<{
       <div className={!isToggleable || isActive ? "opacity-100" : "opacity-50"}>
         <label
           className={`text-xs font-medium ${
-            !isToggleable || isActive ? "text-gray-700" : "text-gray-400"
+            !isToggleable || isActive
+              ? "text-gray-700 dark:text-gray-300"
+              : "text-gray-400 dark:text-gray-500"
           }`}
         >
           {label}
         </label>
-        <div className="text-[10px] text-gray-400">Max: {max}</div>
+        <div className="text-[10px] text-gray-400 dark:text-gray-500">
+          Max: {max}
+        </div>
       </div>
     </div>
 
@@ -82,7 +86,9 @@ const RowInput: React.FC<{
       <div className="flex flex-col relative w-full">
         <span
           className={`absolute right-2 top-1.5 text-[10px] pointer-events-none ${
-            !isToggleable || isActive ? "text-gray-400" : "text-gray-200"
+            !isToggleable || isActive
+              ? "text-gray-400 dark:text-gray-500"
+              : "text-gray-200 dark:text-gray-700"
           }`}
         >
           Score
@@ -102,8 +108,8 @@ const RowInput: React.FC<{
           }}
           className={`w-full pl-3 pr-9 py-1.5 border rounded text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
             !isToggleable || isActive
-              ? "bg-white border-gray-200 text-gray-900"
-              : "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed placeholder-gray-200"
+              ? "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+              : "bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed placeholder-gray-200 dark:placeholder-gray-700"
           }`}
         />
       </div>
@@ -112,7 +118,9 @@ const RowInput: React.FC<{
         <div className="flex flex-col relative w-full">
           <span
             className={`absolute right-2 top-1.5 text-[10px] pointer-events-none ${
-              !isToggleable || isActive ? "text-gray-400" : "text-gray-200"
+              !isToggleable || isActive
+                ? "text-gray-400 dark:text-gray-500"
+                : "text-gray-200 dark:text-gray-700"
             }`}
           >
             Min
@@ -130,12 +138,12 @@ const RowInput: React.FC<{
                 onTimeChange(val);
               }
             }}
-            className={`w-full pl-3 pr-8 py-1.5 border rounded text-sm text-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+            className={`w-full pl-3 pr-8 py-1.5 border rounded text-sm text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
               !isToggleable || isActive
                 ? hasError
-                  ? "border-red-500 ring-1 ring-red-200 bg-red-50 text-red-700"
-                  : "bg-gray-50 border-gray-200 hover:bg-white"
-                : "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed placeholder-gray-200"
+                  ? "border-red-500 ring-1 ring-red-200 dark:ring-red-900/50 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300"
+                  : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-600"
+                : "bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed placeholder-gray-200 dark:placeholder-gray-700"
             }`}
           />
         </div>
@@ -166,16 +174,17 @@ const AccordionSection: React.FC<{
   totalCount,
 }) => (
   <div
-    className={`border border-gray-200 rounded-lg overflow-hidden transition-all duration-300 ${
+    className={`border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 ${
       isOpen
-        ? "ring-1 ring-offset-1 " + color.replace("text-", "ring-")
-        : "hover:border-gray-300"
+        ? "ring-1 ring-offset-1 dark:ring-offset-gray-900 " +
+          color.replace("text-", "ring-")
+        : "hover:border-gray-300 dark:hover:border-gray-600"
     }`}
   >
     <button
       type="button"
       onClick={onToggle}
-      className="w-full px-4 py-3 bg-white flex justify-between items-center focus:outline-none group"
+      className="w-full px-4 py-3 bg-white dark:bg-gray-800 flex justify-between items-center focus:outline-none group"
     >
       <div className="flex items-center gap-3">
         <span className={`text-sm font-bold uppercase tracking-wider ${color}`}>
@@ -183,12 +192,12 @@ const AccordionSection: React.FC<{
         </span>
         <div className="flex gap-1.5">
           {duration > 0 && !isOpen && (
-            <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-full font-mono">
+            <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full font-mono">
               {duration}m
             </span>
           )}
           {activeCount > 0 && !isOpen && (
-            <span className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded-full font-mono border border-green-100">
+            <span className="text-[10px] px-1.5 py-0.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-full font-mono border border-green-100 dark:border-green-900/30">
               {activeCount}/{totalCount} Active
             </span>
           )}
@@ -196,17 +205,17 @@ const AccordionSection: React.FC<{
       </div>
       <div className="flex items-center gap-3">
         {!isOpen && score > 0 && (
-          <span className="text-xs font-semibold px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+          <span className="text-xs font-semibold px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
             Current: {score.toFixed(1)}
           </span>
         )}
-        <span className="text-gray-400 text-xs group-hover:text-gray-600 transition-colors">
+        <span className="text-gray-400 dark:text-gray-500 text-xs group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
           {isOpen ? "▼" : "▶"}
         </span>
       </div>
     </button>
     {isOpen && (
-      <div className="p-4 bg-white border-t border-gray-100 animate-fadeIn">
+      <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 animate-fadeIn">
         {children}
       </div>
     )}
@@ -609,7 +618,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
           e.stopPropagation();
           toggleGroup(ids);
         }}
-        className="text-[10px] font-semibold uppercase tracking-wider bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded transition-colors"
+        className="text-[10px] font-semibold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 px-2 py-1 rounded transition-colors"
       >
         {allActive ? "Deselect All" : "Select All"}
       </button>
@@ -621,14 +630,14 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
       <form
         onSubmit={handleSubmit}
         onKeyDown={handleKeyDown}
-        className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full flex flex-col relative"
+        className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full flex flex-col relative transition-colors"
       >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-900 flex items-center">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
             <span className="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
             Score Entry
           </h2>
-          <div className="text-xs text-gray-500 font-mono">
+          <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
             Total Time: {getTotalDuration()}m
           </div>
         </div>
@@ -637,7 +646,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
           {/* LISTENING */}
           <AccordionSection
             title="Listening"
-            color="text-blue-600"
+            color="text-blue-600 dark:text-blue-400"
             isOpen={openSection === "all" || openSection === "listening"}
             onToggle={() => toggleSection("listening")}
             score={currentScores.s_l}
@@ -649,7 +658,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
           >
             <div className="space-y-1">
               <div className="flex justify-between items-center mb-2 px-1">
-                <span className="text-[10px] text-gray-400 italic">
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 italic">
                   Toggle circle to activate section
                 </span>
                 <SelectAllBtn ids={LISTENING_IDS} />
@@ -674,7 +683,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
                 isActive={!!activeSections[SECTION_IDS.L_LC2]}
                 onToggle={() => toggleActive(SECTION_IDS.L_LC2)}
               />
-              <div className="border-t border-gray-50 my-1"></div>
+              <div className="border-t border-gray-50 dark:border-gray-700/50 my-1"></div>
               <RowInput
                 label="Passage 1"
                 max={MAX_COUNTS.listening.passage1}
@@ -695,7 +704,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
                 isActive={!!activeSections[SECTION_IDS.L_P2]}
                 onToggle={() => toggleActive(SECTION_IDS.L_P2)}
               />
-              <div className="border-t border-gray-50 my-1"></div>
+              <div className="border-t border-gray-50 dark:border-gray-700/50 my-1"></div>
               <RowInput
                 label="Lecture 1"
                 max={MAX_COUNTS.listening.lectures1}
@@ -732,7 +741,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
           {/* READING */}
           <AccordionSection
             title="Reading"
-            color="text-emerald-600"
+            color="text-emerald-600 dark:text-emerald-400"
             isOpen={openSection === "all" || openSection === "reading"}
             onToggle={() => toggleSection("reading")}
             score={currentScores.s_r}
@@ -747,7 +756,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
           >
             <div className="space-y-1">
               <div className="flex justify-between items-center mb-2 px-1">
-                <span className="text-[10px] text-gray-400 italic">
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 italic">
                   Toggle circle to activate section
                 </span>
                 <SelectAllBtn ids={READING_IDS} />
@@ -776,7 +785,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
                 isActive={!!activeSections[SECTION_IDS.R_MAT]}
                 onToggle={() => toggleActive(SECTION_IDS.R_MAT)}
               />
-              <div className="border-t border-gray-50 my-1"></div>
+              <div className="border-t border-gray-50 dark:border-gray-700/50 my-1"></div>
               <RowInput
                 label="Careful (Ps 1)"
                 max={MAX_COUNTS.reading.carefulReading1}
@@ -807,7 +816,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
           {/* OTHERS */}
           <AccordionSection
             title="Writing & Trans"
-            color="text-amber-600"
+            color="text-amber-600 dark:text-amber-400"
             isOpen={openSection === "all" || openSection === "others"}
             onToggle={() => toggleSection("others")}
             score={currentScores.s_w + currentScores.s_t}
@@ -819,7 +828,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
           >
             <div className="space-y-1">
               <div className="flex justify-between items-center mb-2 px-1">
-                <span className="text-[10px] text-gray-400 italic">
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 italic">
                   Toggle circle to activate section
                 </span>
                 <SelectAllBtn ids={OTHER_IDS} />
@@ -853,16 +862,16 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
         </div>
 
         {globalError && (
-          <div className="my-3 p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-100 flex items-start gap-2">
+          <div className="my-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-xs rounded-lg border border-red-100 dark:border-red-900/30 flex items-start gap-2">
             <span className="text-red-500 font-bold">!</span>
             {globalError}
           </div>
         )}
 
-        <div className="pt-2 mt-4 border-t border-gray-100">
+        <div className="pt-2 mt-4 border-t border-gray-100 dark:border-gray-700">
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
           >
             <span>Save Record</span>
             <span className="text-indigo-200 text-sm font-normal">
@@ -891,16 +900,16 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
           },
         ]}
       >
-        <p>
+        <p className="dark:text-gray-300">
           You have marked the following sections as <strong>Attempted</strong>{" "}
           but recorded a score of <strong>0</strong>:
         </p>
-        <ul className="list-disc list-inside my-2 text-gray-600 font-medium">
+        <ul className="list-disc list-inside my-2 text-gray-600 dark:text-gray-400 font-medium">
           {zeroScoreWarning?.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ul>
-        <p className="mt-2 text-gray-500">
+        <p className="mt-2 text-gray-500 dark:text-gray-400">
           Are these failed attempts? If you didn't attempt them, please uncheck
           the section circle.
         </p>

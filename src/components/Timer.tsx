@@ -68,10 +68,10 @@ const Timer: React.FC<TimerProps> = ({ onLogTime }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col h-full">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col h-full transition-colors">
       {/* Target Selector */}
       <div className="mb-6">
-        <label className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 block">
+        <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 block">
           Target Section
         </label>
         <select
@@ -80,8 +80,10 @@ const Timer: React.FC<TimerProps> = ({ onLogTime }) => {
             setTargetSection(e.target.value);
             setErrorMsg("");
           }}
-          className={`w-full text-sm border rounded-lg p-2.5 bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
-            errorMsg ? "border-red-300 ring-1 ring-red-200" : "border-gray-200"
+          className={`w-full text-sm border rounded-lg p-2.5 bg-gray-50 dark:bg-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
+            errorMsg
+              ? "border-red-300 ring-1 ring-red-200 dark:ring-red-900/50"
+              : "border-gray-200 dark:border-gray-600"
           }`}
         >
           {SECTION_OPTIONS.map((opt) => (
@@ -95,14 +97,14 @@ const Timer: React.FC<TimerProps> = ({ onLogTime }) => {
           ))}
         </select>
         {errorMsg && (
-          <p className="text-xs text-red-500 mt-1 font-medium animate-pulse">
+          <p className="text-xs text-red-500 dark:text-red-400 mt-1 font-medium animate-pulse">
             {errorMsg}
           </p>
         )}
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center min-h-[160px]">
-        <div className="text-6xl font-mono font-bold text-gray-800 mb-8 tabular-nums relative">
+        <div className="text-6xl font-mono font-bold text-gray-800 dark:text-white mb-8 tabular-nums relative">
           {formatTime(seconds)}
           {isActive && (
             <span className="absolute -right-6 top-0 flex h-3 w-3">
@@ -117,7 +119,7 @@ const Timer: React.FC<TimerProps> = ({ onLogTime }) => {
             onClick={toggle}
             className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-colors ${
               isActive
-                ? "bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200"
+                ? "bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-900/50"
                 : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
             }`}
           >
@@ -127,7 +129,7 @@ const Timer: React.FC<TimerProps> = ({ onLogTime }) => {
           <button
             onClick={logAndReset}
             disabled={seconds === 0 || !targetSection}
-            className="flex-1 py-3 px-4 rounded-lg font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 py-3 px-4 rounded-lg font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800 dark:hover:bg-indigo-900/40"
           >
             Log & Reset
           </button>
@@ -135,13 +137,13 @@ const Timer: React.FC<TimerProps> = ({ onLogTime }) => {
 
         <button
           onClick={reset}
-          className="mt-4 text-xs text-gray-400 hover:text-red-500 underline decoration-dotted"
+          className="mt-4 text-xs text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 underline decoration-dotted"
         >
           Discard Timer
         </button>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-gray-100 text-xs text-gray-400 text-center">
+      <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-400 dark:text-gray-500 text-center">
         Select a section above to track time. <br />
         Listening sections do not require timing.
       </div>

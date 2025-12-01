@@ -21,16 +21,24 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-lg text-xs">
-        <p className="font-bold text-gray-800 mb-1">{data.displayDate}</p>
+      <div className="bg-white dark:bg-gray-800 p-3 border border-gray-100 dark:border-gray-700 shadow-lg rounded-lg text-xs">
+        <p className="font-bold text-gray-800 dark:text-gray-200 mb-1">
+          {data.displayDate}
+        </p>
         <div className="space-y-1">
-          <p className="text-indigo-600 font-semibold">Score: {data.score}</p>
+          <p className="text-indigo-600 dark:text-indigo-400 font-semibold">
+            Score: {data.score}
+          </p>
           {data.duration !== undefined && data.duration !== null ? (
-            <p className="text-gray-500">Duration: {data.duration} min</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Duration: {data.duration} min
+            </p>
           ) : (
-            <p className="text-gray-300 italic">No time data</p>
+            <p className="text-gray-300 dark:text-gray-600 italic">
+              No time data
+            </p>
           )}
-          <p className="text-gray-400 italic">{data.type}</p>
+          <p className="text-gray-400 dark:text-gray-500 italic">{data.type}</p>
         </div>
       </div>
     );
@@ -162,15 +170,19 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ records }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col h-[400px]">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 flex flex-col h-[400px] transition-colors">
       <div className="flex justify-between items-center mb-4 flex-shrink-0">
-        <h3 className="font-semibold text-gray-800">Performance Trend</h3>
+        <h3 className="font-semibold text-gray-800 dark:text-gray-200">
+          Performance Trend
+        </h3>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-500 font-medium">Metric:</label>
+          <label className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            Metric:
+          </label>
           <select
             value={metric}
             onChange={(e) => setMetric(e.target.value)}
-            className="text-sm border border-gray-200 rounded-md px-2 py-1 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="text-sm border border-gray-200 dark:border-gray-600 rounded-md px-2 py-1 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <option value="total">Total Score</option>
             <hr />
@@ -191,12 +203,16 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ records }) => {
       </div>
 
       {data.length < 2 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center border-t border-gray-50 mt-2">
-          <div className="text-gray-200 mb-2 text-4xl">📊</div>
-          <div className="text-gray-400 font-medium">Not Enough Data</div>
-          <p className="text-xs text-gray-300 mt-1 max-w-xs">
+        <div className="flex-1 flex flex-col items-center justify-center text-center border-t border-gray-50 dark:border-gray-700 mt-2">
+          <div className="text-gray-200 dark:text-gray-700 mb-2 text-4xl">
+            📊
+          </div>
+          <div className="text-gray-400 dark:text-gray-500 font-medium">
+            Not Enough Data
+          </div>
+          <p className="text-xs text-gray-300 dark:text-gray-600 mt-1 max-w-xs">
             Record more sessions involving{" "}
-            <span className="font-bold text-gray-400">
+            <span className="font-bold text-gray-400 dark:text-gray-500">
               {getMetricLabel(metric)}
             </span>{" "}
             to see the trend.
@@ -212,6 +228,7 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ records }) => {
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="#f0f0f0"
+                className="dark:stroke-gray-700"
                 vertical={false}
               />
               <XAxis
@@ -257,7 +274,7 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ records }) => {
 
               <Tooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: "#f9fafb" }}
+                cursor={{ fill: "transparent" }}
               />
               <Legend wrapperStyle={{ paddingTop: "20px" }} />
 
@@ -266,6 +283,7 @@ const ScoreChart: React.FC<ScoreChartProps> = ({ records }) => {
                 yAxisId="right"
                 dataKey="duration"
                 fill="#e2e8f0"
+                className="dark:fill-gray-600"
                 barSize={20}
                 radius={[4, 4, 0, 0]}
                 name="Time (min)"
