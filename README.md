@@ -36,7 +36,7 @@ An elegant, single-page application (SPA) designed to help students prepare for 
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/<your-username>/cet6-recorder.git
+   git clone https://github.com/VasantLong/cet6-recorder.git
    cd cet6-recorder
    ```
 
@@ -106,7 +106,7 @@ See the [LICENSE](LICENSE) file for details.
 
 ## TODO
 
-- [ ] !! Clear alert messages after user interaction.
+- [x] !! Clear alert messages after user interaction.
 - [ ] Improve the UI/UX for better user interaction.
 - [ ] Add dark mode support.
 - [ ] Optimize performance for mobile devices.

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { PracticeRecord, PracticeType, SectionDurations } from "../types";
 import { MAX_COUNTS, SCORING_WEIGHTS, SECTION_IDS } from "../types";
+import Modal from "./Modal";
 
 interface ScoreFormProps {
   onSave: (record: PracticeRecord) => void;
@@ -242,10 +243,16 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
 
   // --- Error State ---
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  const [globalError, setGlobalError] = useState<string | null>(null);
 
   const [openSection, setOpenSection] = useState<
     "listening" | "reading" | "others" | "all"
   >("all");
+
+  // --- Modal State ---
+  const [zeroScoreWarning, setZeroScoreWarning] = useState<string[] | null>(
+    null
+  );
 
   // Handle incoming timer log
   useEffect(() => {
@@ -264,6 +271,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
           delete next[sectionId];
           return next;
         });
+        setGlobalError(null);
       }
     }
   }, [incomingTimeLog]);
@@ -276,6 +284,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
         delete next[id];
         return next;
       });
+      if (Object.keys(fieldErrors).length <= 1) setGlobalError(null);
     }
   };
 
@@ -384,6 +393,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
       }
       return next;
     });
+    setGlobalError(null);
   };
 
   const toggleGroup = (ids: string[]) => {
@@ -398,6 +408,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
       }
     });
     setActiveSections(newState);
+    setGlobalError(null);
   };
 
   const getDuration = (id: string) => durations[id] || 0;
@@ -455,12 +466,10 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
     return parts.join(" & ");
   };
 
-  const validate = (): boolean => {
+  const basicValidate = (): boolean => {
     const newErrors: Record<string, boolean> = {};
-    const zeroScoreChecks: string[] = [];
 
     // 1. Strict Time Validation for Timed Sections
-    // If Active, Duration MUST be > 0.
     const timedIds = [...READING_IDS, ...OTHER_IDS];
     timedIds.forEach((id) => {
       if (activeSections[id]) {
@@ -472,13 +481,17 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
 
     if (Object.keys(newErrors).length > 0) {
       setFieldErrors(newErrors);
-      alert(
+      setGlobalError(
         "Active sections must have a duration greater than 0 minutes. Please check the highlighted fields."
       );
       return false;
     }
 
-    // 2. Zero Score Confirmation for ALL Active Sections
+    return true;
+  };
+
+  const checkZeroScores = () => {
+    const zeroScoreChecks: string[] = [];
     const allIds = [...LISTENING_IDS, ...READING_IDS, ...OTHER_IDS];
     allIds.forEach((id) => {
       if (activeSections[id]) {
@@ -488,31 +501,35 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
         }
       }
     });
-
-    for (const label of zeroScoreChecks) {
-      const confirmed = window.confirm(
-        `You marked "${label}" as active/attempted but recorded a score of 0. Is this a real score (failed attempt)?`
-      );
-      if (!confirmed) return false;
-    }
-
-    return true;
+    return zeroScoreChecks;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
+    setGlobalError(null);
 
     // If nothing active, warn
     if (
       Object.keys(activeSections).filter((k) => activeSections[k]).length === 0
     ) {
-      alert("Please select at least one section to record.");
+      setGlobalError("Please select at least one section to record.");
       return;
     }
 
-    if (!validate()) return;
+    if (!basicValidate()) return;
 
+    // Zero score check
+    const zeroScores = checkZeroScores();
+    if (zeroScores.length > 0) {
+      setZeroScoreWarning(zeroScores);
+      return;
+    }
+
+    finalizeSave();
+  };
+
+  const finalizeSave = () => {
     const { s_l, s_r, s_w, s_t } = currentScores;
     const total = s_l + s_r + s_w + s_t;
     const type = determinePracticeType(s_l, s_r, s_w, s_t);
@@ -575,6 +592,8 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
     setDurations({});
     setFieldErrors({});
     setActiveSections({});
+    setGlobalError(null);
+    setZeroScoreWarning(null);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -598,250 +617,295 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      onKeyDown={handleKeyDown}
-      className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full flex flex-col"
-    >
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900 flex items-center">
-          <span className="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
-          Score Entry
-        </h2>
-        <div className="text-xs text-gray-500 font-mono">
-          Total Time: {getTotalDuration()}m
+    <>
+      <form
+        onSubmit={handleSubmit}
+        onKeyDown={handleKeyDown}
+        className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full flex flex-col relative"
+      >
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center">
+            <span className="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
+            Score Entry
+          </h2>
+          <div className="text-xs text-gray-500 font-mono">
+            Total Time: {getTotalDuration()}m
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-3 flex-1 overflow-y-auto pr-1 custom-scrollbar">
-        {/* LISTENING */}
-        <AccordionSection
-          title="Listening"
-          color="text-blue-600"
-          isOpen={openSection === "all" || openSection === "listening"}
-          onToggle={() => toggleSection("listening")}
-          score={currentScores.s_l}
-          duration={0}
-          activeCount={LISTENING_IDS.filter((id) => activeSections[id]).length}
-          totalCount={LISTENING_IDS.length}
-        >
-          <div className="space-y-1">
-            <div className="flex justify-between items-center mb-2 px-1">
-              <span className="text-[10px] text-gray-400 italic">
-                Toggle circle to activate section
-              </span>
-              <SelectAllBtn ids={LISTENING_IDS} />
+        <div className="space-y-3 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+          {/* LISTENING */}
+          <AccordionSection
+            title="Listening"
+            color="text-blue-600"
+            isOpen={openSection === "all" || openSection === "listening"}
+            onToggle={() => toggleSection("listening")}
+            score={currentScores.s_l}
+            duration={0}
+            activeCount={
+              LISTENING_IDS.filter((id) => activeSections[id]).length
+            }
+            totalCount={LISTENING_IDS.length}
+          >
+            <div className="space-y-1">
+              <div className="flex justify-between items-center mb-2 px-1">
+                <span className="text-[10px] text-gray-400 italic">
+                  Toggle circle to activate section
+                </span>
+                <SelectAllBtn ids={LISTENING_IDS} />
+              </div>
+              <RowInput
+                label="Long Conv 1"
+                max={MAX_COUNTS.listening.longConversation1}
+                value={l_lc1}
+                onChange={setL_Lc1}
+                hideTime
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.L_LC1]}
+                onToggle={() => toggleActive(SECTION_IDS.L_LC1)}
+              />
+              <RowInput
+                label="Long Conv 2"
+                max={MAX_COUNTS.listening.longConversation2}
+                value={l_lc2}
+                onChange={setL_Lc2}
+                hideTime
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.L_LC2]}
+                onToggle={() => toggleActive(SECTION_IDS.L_LC2)}
+              />
+              <div className="border-t border-gray-50 my-1"></div>
+              <RowInput
+                label="Passage 1"
+                max={MAX_COUNTS.listening.passage1}
+                value={l_p1}
+                onChange={setL_P1}
+                hideTime
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.L_P1]}
+                onToggle={() => toggleActive(SECTION_IDS.L_P1)}
+              />
+              <RowInput
+                label="Passage 2"
+                max={MAX_COUNTS.listening.passage2}
+                value={l_p2}
+                onChange={setL_P2}
+                hideTime
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.L_P2]}
+                onToggle={() => toggleActive(SECTION_IDS.L_P2)}
+              />
+              <div className="border-t border-gray-50 my-1"></div>
+              <RowInput
+                label="Lecture 1"
+                max={MAX_COUNTS.listening.lectures1}
+                value={l_lec1}
+                onChange={setL_Lec1}
+                hideTime
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.L_LEC1]}
+                onToggle={() => toggleActive(SECTION_IDS.L_LEC1)}
+              />
+              <RowInput
+                label="Lecture 2"
+                max={MAX_COUNTS.listening.lectures2}
+                value={l_lec2}
+                onChange={setL_Lec2}
+                hideTime
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.L_LEC2]}
+                onToggle={() => toggleActive(SECTION_IDS.L_LEC2)}
+              />
+              <RowInput
+                label="Lecture 3"
+                max={MAX_COUNTS.listening.lectures3}
+                value={l_lec3}
+                onChange={setL_Lec3}
+                hideTime
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.L_LEC3]}
+                onToggle={() => toggleActive(SECTION_IDS.L_LEC3)}
+              />
             </div>
-            <RowInput
-              label="Long Conv 1"
-              max={MAX_COUNTS.listening.longConversation1}
-              value={l_lc1}
-              onChange={setL_Lc1}
-              hideTime
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.L_LC1]}
-              onToggle={() => toggleActive(SECTION_IDS.L_LC1)}
-            />
-            <RowInput
-              label="Long Conv 2"
-              max={MAX_COUNTS.listening.longConversation2}
-              value={l_lc2}
-              onChange={setL_Lc2}
-              hideTime
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.L_LC2]}
-              onToggle={() => toggleActive(SECTION_IDS.L_LC2)}
-            />
-            <div className="border-t border-gray-50 my-1"></div>
-            <RowInput
-              label="Passage 1"
-              max={MAX_COUNTS.listening.passage1}
-              value={l_p1}
-              onChange={setL_P1}
-              hideTime
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.L_P1]}
-              onToggle={() => toggleActive(SECTION_IDS.L_P1)}
-            />
-            <RowInput
-              label="Passage 2"
-              max={MAX_COUNTS.listening.passage2}
-              value={l_p2}
-              onChange={setL_P2}
-              hideTime
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.L_P2]}
-              onToggle={() => toggleActive(SECTION_IDS.L_P2)}
-            />
-            <div className="border-t border-gray-50 my-1"></div>
-            <RowInput
-              label="Lecture 1"
-              max={MAX_COUNTS.listening.lectures1}
-              value={l_lec1}
-              onChange={setL_Lec1}
-              hideTime
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.L_LEC1]}
-              onToggle={() => toggleActive(SECTION_IDS.L_LEC1)}
-            />
-            <RowInput
-              label="Lecture 2"
-              max={MAX_COUNTS.listening.lectures2}
-              value={l_lec2}
-              onChange={setL_Lec2}
-              hideTime
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.L_LEC2]}
-              onToggle={() => toggleActive(SECTION_IDS.L_LEC2)}
-            />
-            <RowInput
-              label="Lecture 3"
-              max={MAX_COUNTS.listening.lectures3}
-              value={l_lec3}
-              onChange={setL_Lec3}
-              hideTime
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.L_LEC3]}
-              onToggle={() => toggleActive(SECTION_IDS.L_LEC3)}
-            />
-          </div>
-        </AccordionSection>
+          </AccordionSection>
 
-        {/* READING */}
-        <AccordionSection
-          title="Reading"
-          color="text-emerald-600"
-          isOpen={openSection === "all" || openSection === "reading"}
-          onToggle={() => toggleSection("reading")}
-          score={currentScores.s_r}
-          duration={[
-            SECTION_IDS.R_BC,
-            SECTION_IDS.R_MAT,
-            SECTION_IDS.R_CR1,
-            SECTION_IDS.R_CR2,
-          ].reduce((a, b) => a + getDuration(b), 0)}
-          activeCount={READING_IDS.filter((id) => activeSections[id]).length}
-          totalCount={READING_IDS.length}
-        >
-          <div className="space-y-1">
-            <div className="flex justify-between items-center mb-2 px-1">
-              <span className="text-[10px] text-gray-400 italic">
-                Toggle circle to activate section
-              </span>
-              <SelectAllBtn ids={READING_IDS} />
+          {/* READING */}
+          <AccordionSection
+            title="Reading"
+            color="text-emerald-600"
+            isOpen={openSection === "all" || openSection === "reading"}
+            onToggle={() => toggleSection("reading")}
+            score={currentScores.s_r}
+            duration={[
+              SECTION_IDS.R_BC,
+              SECTION_IDS.R_MAT,
+              SECTION_IDS.R_CR1,
+              SECTION_IDS.R_CR2,
+            ].reduce((a, b) => a + getDuration(b), 0)}
+            activeCount={READING_IDS.filter((id) => activeSections[id]).length}
+            totalCount={READING_IDS.length}
+          >
+            <div className="space-y-1">
+              <div className="flex justify-between items-center mb-2 px-1">
+                <span className="text-[10px] text-gray-400 italic">
+                  Toggle circle to activate section
+                </span>
+                <SelectAllBtn ids={READING_IDS} />
+              </div>
+              <RowInput
+                label="Banked Cloze"
+                max={MAX_COUNTS.reading.bankedCloze}
+                value={r_bc}
+                onChange={setR_Bc}
+                timeValue={getDuration(SECTION_IDS.R_BC)}
+                onTimeChange={(v) => updateDuration(SECTION_IDS.R_BC, v)}
+                hasError={fieldErrors[SECTION_IDS.R_BC]}
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.R_BC]}
+                onToggle={() => toggleActive(SECTION_IDS.R_BC)}
+              />
+              <RowInput
+                label="Matching"
+                max={MAX_COUNTS.reading.matching}
+                value={r_mat}
+                onChange={setR_Mat}
+                timeValue={getDuration(SECTION_IDS.R_MAT)}
+                onTimeChange={(v) => updateDuration(SECTION_IDS.R_MAT, v)}
+                hasError={fieldErrors[SECTION_IDS.R_MAT]}
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.R_MAT]}
+                onToggle={() => toggleActive(SECTION_IDS.R_MAT)}
+              />
+              <div className="border-t border-gray-50 my-1"></div>
+              <RowInput
+                label="Careful (Ps 1)"
+                max={MAX_COUNTS.reading.carefulReading1}
+                value={r_cr1}
+                onChange={setR_Cr1}
+                timeValue={getDuration(SECTION_IDS.R_CR1)}
+                onTimeChange={(v) => updateDuration(SECTION_IDS.R_CR1, v)}
+                hasError={fieldErrors[SECTION_IDS.R_CR1]}
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.R_CR1]}
+                onToggle={() => toggleActive(SECTION_IDS.R_CR1)}
+              />
+              <RowInput
+                label="Careful (Ps 2)"
+                max={MAX_COUNTS.reading.carefulReading2}
+                value={r_cr2}
+                onChange={setR_Cr2}
+                timeValue={getDuration(SECTION_IDS.R_CR2)}
+                onTimeChange={(v) => updateDuration(SECTION_IDS.R_CR2, v)}
+                hasError={fieldErrors[SECTION_IDS.R_CR2]}
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.R_CR2]}
+                onToggle={() => toggleActive(SECTION_IDS.R_CR2)}
+              />
             </div>
-            <RowInput
-              label="Banked Cloze"
-              max={MAX_COUNTS.reading.bankedCloze}
-              value={r_bc}
-              onChange={setR_Bc}
-              timeValue={getDuration(SECTION_IDS.R_BC)}
-              onTimeChange={(v) => updateDuration(SECTION_IDS.R_BC, v)}
-              hasError={fieldErrors[SECTION_IDS.R_BC]}
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.R_BC]}
-              onToggle={() => toggleActive(SECTION_IDS.R_BC)}
-            />
-            <RowInput
-              label="Matching"
-              max={MAX_COUNTS.reading.matching}
-              value={r_mat}
-              onChange={setR_Mat}
-              timeValue={getDuration(SECTION_IDS.R_MAT)}
-              onTimeChange={(v) => updateDuration(SECTION_IDS.R_MAT, v)}
-              hasError={fieldErrors[SECTION_IDS.R_MAT]}
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.R_MAT]}
-              onToggle={() => toggleActive(SECTION_IDS.R_MAT)}
-            />
-            <div className="border-t border-gray-50 my-1"></div>
-            <RowInput
-              label="Careful (Ps 1)"
-              max={MAX_COUNTS.reading.carefulReading1}
-              value={r_cr1}
-              onChange={setR_Cr1}
-              timeValue={getDuration(SECTION_IDS.R_CR1)}
-              onTimeChange={(v) => updateDuration(SECTION_IDS.R_CR1, v)}
-              hasError={fieldErrors[SECTION_IDS.R_CR1]}
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.R_CR1]}
-              onToggle={() => toggleActive(SECTION_IDS.R_CR1)}
-            />
-            <RowInput
-              label="Careful (Ps 2)"
-              max={MAX_COUNTS.reading.carefulReading2}
-              value={r_cr2}
-              onChange={setR_Cr2}
-              timeValue={getDuration(SECTION_IDS.R_CR2)}
-              onTimeChange={(v) => updateDuration(SECTION_IDS.R_CR2, v)}
-              hasError={fieldErrors[SECTION_IDS.R_CR2]}
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.R_CR2]}
-              onToggle={() => toggleActive(SECTION_IDS.R_CR2)}
-            />
-          </div>
-        </AccordionSection>
+          </AccordionSection>
 
-        {/* OTHERS */}
-        <AccordionSection
-          title="Writing & Trans"
-          color="text-amber-600"
-          isOpen={openSection === "all" || openSection === "others"}
-          onToggle={() => toggleSection("others")}
-          score={currentScores.s_w + currentScores.s_t}
-          duration={
-            getDuration(SECTION_IDS.W_WRIT) + getDuration(SECTION_IDS.T_TRANS)
-          }
-          activeCount={OTHER_IDS.filter((id) => activeSections[id]).length}
-          totalCount={OTHER_IDS.length}
-        >
-          <div className="space-y-1">
-            <div className="flex justify-between items-center mb-2 px-1">
-              <span className="text-[10px] text-gray-400 italic">
-                Toggle circle to activate section
-              </span>
-              <SelectAllBtn ids={OTHER_IDS} />
+          {/* OTHERS */}
+          <AccordionSection
+            title="Writing & Trans"
+            color="text-amber-600"
+            isOpen={openSection === "all" || openSection === "others"}
+            onToggle={() => toggleSection("others")}
+            score={currentScores.s_w + currentScores.s_t}
+            duration={
+              getDuration(SECTION_IDS.W_WRIT) + getDuration(SECTION_IDS.T_TRANS)
+            }
+            activeCount={OTHER_IDS.filter((id) => activeSections[id]).length}
+            totalCount={OTHER_IDS.length}
+          >
+            <div className="space-y-1">
+              <div className="flex justify-between items-center mb-2 px-1">
+                <span className="text-[10px] text-gray-400 italic">
+                  Toggle circle to activate section
+                </span>
+                <SelectAllBtn ids={OTHER_IDS} />
+              </div>
+              <RowInput
+                label="Writing"
+                max={MAX_COUNTS.others.writing}
+                value={w_writ}
+                onChange={setW_Writ}
+                timeValue={getDuration(SECTION_IDS.W_WRIT)}
+                onTimeChange={(v) => updateDuration(SECTION_IDS.W_WRIT, v)}
+                hasError={fieldErrors[SECTION_IDS.W_WRIT]}
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.W_WRIT]}
+                onToggle={() => toggleActive(SECTION_IDS.W_WRIT)}
+              />
+              <RowInput
+                label="Translation"
+                max={MAX_COUNTS.others.translation}
+                value={t_trans}
+                onChange={setT_Trans}
+                timeValue={getDuration(SECTION_IDS.T_TRANS)}
+                onTimeChange={(v) => updateDuration(SECTION_IDS.T_TRANS, v)}
+                hasError={fieldErrors[SECTION_IDS.T_TRANS]}
+                isToggleable
+                isActive={!!activeSections[SECTION_IDS.T_TRANS]}
+                onToggle={() => toggleActive(SECTION_IDS.T_TRANS)}
+              />
             </div>
-            <RowInput
-              label="Writing"
-              max={MAX_COUNTS.others.writing}
-              value={w_writ}
-              onChange={setW_Writ}
-              timeValue={getDuration(SECTION_IDS.W_WRIT)}
-              onTimeChange={(v) => updateDuration(SECTION_IDS.W_WRIT, v)}
-              hasError={fieldErrors[SECTION_IDS.W_WRIT]}
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.W_WRIT]}
-              onToggle={() => toggleActive(SECTION_IDS.W_WRIT)}
-            />
-            <RowInput
-              label="Translation"
-              max={MAX_COUNTS.others.translation}
-              value={t_trans}
-              onChange={setT_Trans}
-              timeValue={getDuration(SECTION_IDS.T_TRANS)}
-              onTimeChange={(v) => updateDuration(SECTION_IDS.T_TRANS, v)}
-              hasError={fieldErrors[SECTION_IDS.T_TRANS]}
-              isToggleable
-              isActive={!!activeSections[SECTION_IDS.T_TRANS]}
-              onToggle={() => toggleActive(SECTION_IDS.T_TRANS)}
-            />
-          </div>
-        </AccordionSection>
-      </div>
+          </AccordionSection>
+        </div>
 
-      <div className="pt-6 mt-4 border-t border-gray-100">
-        <button
-          type="submit"
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
-        >
-          <span>Save Record</span>
-          <span className="text-indigo-200 text-sm font-normal">
-            ({getTotalDuration()} mins)
-          </span>
-        </button>
-      </div>
-    </form>
+        {globalError && (
+          <div className="my-3 p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-100 flex items-start gap-2">
+            <span className="text-red-500 font-bold">!</span>
+            {globalError}
+          </div>
+        )}
+
+        <div className="pt-2 mt-4 border-t border-gray-100">
+          <button
+            type="submit"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2"
+          >
+            <span>Save Record</span>
+            <span className="text-indigo-200 text-sm font-normal">
+              ({getTotalDuration()} mins)
+            </span>
+          </button>
+        </div>
+      </form>
+
+      {/* Zero Score Confirmation Modal */}
+      <Modal
+        isOpen={!!zeroScoreWarning}
+        title="Zero Score Detected"
+        onClose={() => setZeroScoreWarning(null)}
+        type="warning"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setZeroScoreWarning(null),
+            variant: "secondary",
+          },
+          {
+            label: "Confirm Scores",
+            onClick: finalizeSave,
+            variant: "primary",
+          },
+        ]}
+      >
+        <p>
+          You have marked the following sections as <strong>Attempted</strong>{" "}
+          but recorded a score of <strong>0</strong>:
+        </p>
+        <ul className="list-disc list-inside my-2 text-gray-600 font-medium">
+          {zeroScoreWarning?.map((s) => (
+            <li key={s}>{s}</li>
+          ))}
+        </ul>
+        <p className="mt-2 text-gray-500">
+          Are these failed attempts? If you didn't attempt them, please uncheck
+          the section circle.
+        </p>
+      </Modal>
+    </>
   );
 };
 

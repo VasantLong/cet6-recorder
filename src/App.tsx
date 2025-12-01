@@ -11,6 +11,7 @@ import {
   clearAllRecords,
 } from "./services/storageService";
 import { exportToCSV } from "./services/exportService";
+import Modal from "./components/Modal";
 
 type Tab = "practice" | "statistics";
 
@@ -23,6 +24,11 @@ const App: React.FC = () => {
   } | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("practice");
 
+  // Modal States
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
   useEffect(() => {
     setRecords(getRecords());
   }, []);
@@ -33,38 +39,22 @@ const App: React.FC = () => {
     saveRecords(updated);
     // Reset timer log state
     setTimerLog(null);
-
-    // Prompt user to view stats
-    if (
-      window.confirm(
-        "Record saved successfully! Would you like to view your statistics now?"
-      )
-    ) {
-      setActiveTab("statistics");
-    }
+    setSuccessModalOpen(true);
   };
 
-  const deleteRecord = (id: string) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this record? This action cannot be undone."
-      )
-    ) {
-      const updated = records.filter((r) => r.id !== id);
+  const confirmDelete = () => {
+    if (deleteId) {
+      const updated = records.filter((r) => r.id !== deleteId);
       setRecords(updated);
       saveRecords(updated);
+      setDeleteId(null);
     }
   };
 
-  const handleClearAll = () => {
-    if (
-      window.confirm(
-        "⚠️ WARNING: This will permanently delete ALL your practice history and data.\n\nAre you sure you want to continue?"
-      )
-    ) {
-      clearAllRecords();
-      setRecords([]);
-    }
+  const confirmClearAll = () => {
+    clearAllRecords();
+    setRecords([]);
+    setShowClearConfirm(false);
   };
 
   const handleTimerLog = (sectionId: string, minutes: number) => {
@@ -214,7 +204,7 @@ const App: React.FC = () => {
                   Export CSV
                 </button>
                 <button
-                  onClick={handleClearAll}
+                  onClick={() => setShowClearConfirm(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:border-red-300 text-sm font-medium transition-all"
                 >
                   <svg
@@ -239,11 +229,80 @@ const App: React.FC = () => {
 
             <div className="grid grid-cols-1 gap-8">
               <ScoreChart records={records} />
-              <HistoryList records={records} onDelete={deleteRecord} />
+              <HistoryList records={records} onDelete={setDeleteId} />
             </div>
           </div>
         )}
       </main>
+
+      {/* Global Modals */}
+
+      {/* Success Modal */}
+      <Modal
+        isOpen={successModalOpen}
+        title="Session Recorded!"
+        onClose={() => setSuccessModalOpen(false)}
+        type="success"
+        actions={[
+          {
+            label: "Keep Practicing",
+            onClick: () => setSuccessModalOpen(false),
+            variant: "secondary",
+          },
+          {
+            label: "View Statistics",
+            onClick: () => {
+              setSuccessModalOpen(false);
+              setActiveTab("statistics");
+            },
+            variant: "primary",
+          },
+        ]}
+      >
+        Your practice session has been successfully saved to your history.
+      </Modal>
+
+      {/* Delete Confirmation */}
+      <Modal
+        isOpen={!!deleteId}
+        title="Delete Record"
+        onClose={() => setDeleteId(null)}
+        type="danger"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setDeleteId(null),
+            variant: "secondary",
+          },
+          { label: "Delete", onClick: confirmDelete, variant: "danger" },
+        ]}
+      >
+        Are you sure you want to delete this practice record? This action cannot
+        be undone.
+      </Modal>
+
+      {/* Clear All Confirmation */}
+      <Modal
+        isOpen={showClearConfirm}
+        title="Clear All Data"
+        onClose={() => setShowClearConfirm(false)}
+        type="danger"
+        actions={[
+          {
+            label: "Cancel",
+            onClick: () => setShowClearConfirm(false),
+            variant: "secondary",
+          },
+          {
+            label: "Clear Everything",
+            onClick: confirmClearAll,
+            variant: "danger",
+          },
+        ]}
+      >
+        ⚠️ WARNING: This will permanently delete ALL your practice history and
+        data. Are you absolutely sure you want to continue?
+      </Modal>
     </div>
   );
 };
