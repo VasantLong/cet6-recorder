@@ -108,7 +108,7 @@ See the [LICENSE](LICENSE) file for details.
 
 - [x] !! Clear alert messages after user interaction.
 - [ ] Improve the UI/UX for better user interaction.
-- [ ] Add dark mode support.
+- [x] Add dark mode support.
 - [ ] Optimize performance for mobile devices.
 - [ ] Implement user authentication for cloud storage options.
 - [ ] Integrate with third-party APIs for additional resources.
