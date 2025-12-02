@@ -1,5 +1,7 @@
 # CET-6 Recorder (Web App)
 
+[English](README.md) | [简体中文](README-zh.md)
+
 Github Pages：https://vasantlong.github.io/cet6-recorder/
 
 An elegant, single-page application (SPA) designed to help students prepare for the **CET-6 (College English Test Band 6)**. It offers strict scoring algorithms, granular time tracking, and insightful performance analytics.
@@ -19,9 +21,9 @@ An elegant, single-page application (SPA) designed to help students prepare for 
   - **Drill Performance**: See your specific strength in granular areas (e.g., matching vs. cloze).
   - **Trends Chart**: Dual-axis chart visualizing Score vs. Duration over time.
 - **Data Management**:
-  - **Local Storage** persistence (offline capable).
+  - **Cloud Storage** with Supabase (requires configuration).
   - Export history to **CSV** for Excel analysis.
-  - Data privacy (no server upload).
+  - Data privacy (end-to-end encryption options).
 
 ## 🛠 Tech Stack
 
@@ -29,6 +31,8 @@ An elegant, single-page application (SPA) designed to help students prepare for 
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS
 - **Charting**: Recharts
+- **Authentication**: Supabase Auth
+- **Database**: Supabase PostgreSQL with Row Level Security
 - **Icons/Fonts**: Inter Font
 
 ## 📦 Installation & Setup
@@ -46,7 +50,26 @@ An elegant, single-page application (SPA) designed to help students prepare for 
    npm install
    ```
 
-3. **Run development server**:
+3. **Configure Supabase (Optional but recommended)**:
+
+   - Sign up for a Supabase account at [https://supabase.com](https://supabase.com).
+
+   - Create a new project.
+
+   - In the project dashboard, copy your **Project URL** and **Anon Key**.
+
+   - Create a `.env` file in the root of your project.
+
+   - Add the following lines to the file (use the `VITE_` prefix):
+
+     ```
+     VITE_SUPABASE_URL=your-project-url-here
+     VITE_SUPABASE_ANON_KEY=your-anon-key-here
+     ```
+
+   - Replace `your-project-url-here` and `your-anon-key-here` with your actual Supabase project URL and Anon Key.
+
+4. **Run development server**:
 
    ```bash
    npm run dev
@@ -54,7 +77,7 @@ An elegant, single-page application (SPA) designed to help students prepare for 
 
    Open http://localhost:5173 in your browser.
 
-4. **Build for production**:
+5. **Build for production**:
 
    ```bash
    npm run build
@@ -96,6 +119,19 @@ This project is configured for easy deployment to GitHub Pages.
 2. **Chart**: Use the dropdown to switch metrics (e.g., view only "Writing" trends).
 3. **Manage**: Export data to CSV or clear history.
 
+### Dark Mode
+
+The application supports dark mode which can be toggled using the moon/sun icon in the top navigation bar. The theme preference is saved in local storage and persists between sessions.
+
+## ☁️ Cloud Sync
+
+The application supports cloud synchronization through Supabase. To enable this feature:
+
+1. Create a Supabase project at [https://supabase.io](https://supabase.io/)
+2. Set up authentication and database tables according to the project requirements
+3. Add your Supabase credentials to the `.env` file
+4. Sign in to the application to start syncing your data
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request.
@@ -106,9 +142,10 @@ See the [LICENSE](LICENSE) file for details.
 
 ## TODO
 
-- [x] !! Clear alert messages after user interaction.
+- [x] !! Clear alert messages after user interaction.==v1.1.0==
 - [ ] Improve the UI/UX for better user interaction.
-- [x] Add dark mode support.
+- [x] Add dark mode support.==v1.2.0==
 - [ ] Optimize performance for mobile devices.
-- [ ] Implement user authentication for cloud storage options.
+- [x] Implement user authentication for cloud storage options.==v2.0.0==
 - [ ] Integrate with third-party APIs for additional resources.
+- [x] Add export to CSV functionality.
