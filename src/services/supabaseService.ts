@@ -2,6 +2,11 @@ import { supabase } from "./supabaseClient";
 import type { PracticeRecord } from "../types";
 
 export const fetchSupabaseRecords = async (): Promise<PracticeRecord[]> => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
   const { data, error } = await supabase
     .from("practice_records")
     .select("*")
@@ -31,10 +36,17 @@ export const fetchSupabaseRecords = async (): Promise<PracticeRecord[]> => {
 export const addSupabaseRecord = async (
   record: PracticeRecord
 ): Promise<PracticeRecord | null> => {
-  const { id, ...rest } = record; // Exclude local ID, let DB generate UUID if needed, or we can use it.
+  // Get the current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
+  if (!user) {
+    throw new Error("User must be logged in to save records"); // Exclude local ID, let DB generate UUID if needed, or we can use it.
+  }
   // Flatten structure for SQL
   const row = {
+    user_id: user.id,
     timestamp: record.timestamp,
     duration_minutes: record.durationMinutes,
     practice_type: record.practiceType,
@@ -58,7 +70,7 @@ export const addSupabaseRecord = async (
     throw error;
   }
 
-  // Return formatted record with the new real UUID
+  // Return formatted record with the new real UUID from database
   return {
     ...record,
     id: data.id,
@@ -79,13 +91,15 @@ export const deleteSupabaseRecord = async (id: string): Promise<void> => {
 
 export const clearSupabaseRecords = async (): Promise<void> => {
   // RLS policies ensure users only delete their own data
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
 
   const { error } = await supabase
     .from("practice_records")
     .delete()
-    .eq("user_id", userData.user.id);
+    .eq("user_id", user.id);
 
   if (error) {
     console.error("Error clearing records:", error);
