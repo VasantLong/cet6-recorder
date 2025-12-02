@@ -1,14 +1,14 @@
-import { supabase } from './supabaseClient';
-import { PracticeRecord } from '../types';
+import { supabase } from "./supabaseClient";
+import type { PracticeRecord } from "../types";
 
 export const fetchSupabaseRecords = async (): Promise<PracticeRecord[]> => {
   const { data, error } = await supabase
-    .from('practice_records')
-    .select('*')
-    .order('timestamp', { ascending: false });
+    .from("practice_records")
+    .select("*")
+    .order("timestamp", { ascending: false });
 
   if (error) {
-    console.error('Error fetching records:', error);
+    console.error("Error fetching records:", error);
     throw error;
   }
 
@@ -24,13 +24,15 @@ export const fetchSupabaseRecords = async (): Promise<PracticeRecord[]> => {
     scoreWriting: row.score_writing,
     scoreTranslation: row.score_translation,
     inputs: row.inputs,
-    attempts: row.attempts
+    attempts: row.attempts,
   }));
 };
 
-export const addSupabaseRecord = async (record: PracticeRecord): Promise<PracticeRecord | null> => {
+export const addSupabaseRecord = async (
+  record: PracticeRecord
+): Promise<PracticeRecord | null> => {
   const { id, ...rest } = record; // Exclude local ID, let DB generate UUID if needed, or we can use it.
-  
+
   // Flatten structure for SQL
   const row = {
     timestamp: record.timestamp,
@@ -42,51 +44,51 @@ export const addSupabaseRecord = async (record: PracticeRecord): Promise<Practic
     score_writing: record.scoreWriting,
     score_translation: record.scoreTranslation,
     inputs: record.inputs,
-    attempts: record.attempts
+    attempts: record.attempts,
   };
 
   const { data, error } = await supabase
-    .from('practice_records')
+    .from("practice_records")
     .insert([row])
     .select()
     .single();
 
   if (error) {
-    console.error('Error adding record:', error);
+    console.error("Error adding record:", error);
     throw error;
   }
 
   // Return formatted record with the new real UUID
   return {
     ...record,
-    id: data.id
+    id: data.id,
   };
 };
 
 export const deleteSupabaseRecord = async (id: string): Promise<void> => {
   const { error } = await supabase
-    .from('practice_records')
+    .from("practice_records")
     .delete()
-    .eq('id', id);
+    .eq("id", id);
 
   if (error) {
-    console.error('Error deleting record:', error);
+    console.error("Error deleting record:", error);
     throw error;
   }
 };
 
 export const clearSupabaseRecords = async (): Promise<void> => {
-    // RLS policies ensure users only delete their own data
-    const { data: userData } = await supabase.auth.getUser();
-    if(!userData.user) return;
+  // RLS policies ensure users only delete their own data
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return;
 
-    const { error } = await supabase
-        .from('practice_records')
-        .delete()
-        .eq('user_id', userData.user.id);
+  const { error } = await supabase
+    .from("practice_records")
+    .delete()
+    .eq("user_id", userData.user.id);
 
-    if (error) {
-        console.error('Error clearing records:', error);
-        throw error;
-    }
-}
+  if (error) {
+    console.error("Error clearing records:", error);
+    throw error;
+  }
+};

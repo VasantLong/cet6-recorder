@@ -49,22 +49,26 @@ const Auth: React.FC = () => {
            </div>
            
            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-             To enable Cloud Sync, you need to connect this app to your Supabase project.
+             To enable Cloud Sync, you need to configure your environment variables.
            </p>
 
            <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-100 dark:border-gray-700 mb-6">
-             <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">How to get your keys:</h3>
-             <ol className="list-decimal list-inside text-sm text-gray-600 dark:text-gray-400 space-y-1">
-               <li>Go to your <a href="https://supabase.com/dashboard" target="_blank" className="text-indigo-600 hover:underline">Supabase Dashboard</a>.</li>
-               <li>Select your project and click <strong>Settings</strong> (cog icon).</li>
-               <li>Click on <strong>API</strong> in the sidebar.</li>
-               <li>Copy the <strong>Project URL</strong> and <strong>anon / public</strong> key.</li>
-               <li>Paste them into <code>services/supabaseClient.ts</code>.</li>
+             <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">Setup Instructions:</h3>
+             <ol className="list-decimal list-inside text-sm text-gray-600 dark:text-gray-400 space-y-2">
+               <li>Create a file named <code>.env</code> in the root of your project.</li>
+               <li>Add the following lines to the file:</li>
              </ol>
+             <div className="mt-3 p-3 bg-gray-800 text-gray-100 rounded text-xs font-mono overflow-x-auto">
+                SUPABASE_URL=https://your-project-id.supabase.co<br/>
+                SUPABASE_ANON_KEY=your-anon-key-here
+             </div>
+             <p className="mt-3 text-xs text-gray-500 italic">
+               Note: Depending on your bundler (Vite/CRA), you may need to prefix variables with <code>VITE_</code> or <code>REACT_APP_</code>.
+             </p>
            </div>
 
            <div className="text-center text-xs text-gray-400 dark:text-gray-500">
-             Update the code file to continue.
+             Restart your development server after creating the .env file.
            </div>
         </div>
       </div>
