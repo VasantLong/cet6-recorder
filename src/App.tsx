@@ -5,21 +5,26 @@ import ScoreForm from "./components/ScoreForm";
 import HistoryList from "./components/HistoryList";
 import ScoreChart from "./components/ScoreChart";
 import type { PracticeRecord } from "./types";
-import {
-  getRecords,
-  saveRecords,
-  clearAllRecords,
-} from "./services/storageService";
 import { exportToCSV } from "./services/exportService";
 import Modal from "./components/Modal";
 import SlideOver from "./components/SlideOver";
+import Auth from "./components/Auth";
+import { supabase } from "./services/supabaseClient";
+import {
+  fetchSupabaseRecords,
+  addSupabaseRecord,
+  deleteSupabaseRecord,
+  clearSupabaseRecords,
+} from "./services/supabaseService";
 
 type Tab = "practice" | "statistics";
 type Theme = "light" | "dark";
 
 const App: React.FC = () => {
+  const [session, setSession] = useState<any>(null);
+  const [loadingSession, setLoadingSession] = useState(true);
+
   const [records, setRecords] = useState<PracticeRecord[]>([]);
-  // State to hold data coming from Timer to be consumed by Form
   const [timerLog, setTimerLog] = useState<{
     sectionId: string;
     minutes: number;
@@ -43,10 +48,44 @@ const App: React.FC = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
 
+  // Check active session
   useEffect(() => {
-    setRecords(getRecords());
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoadingSession(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch Data when session is active
+  useEffect(() => {
+    if (session) {
+      loadData();
+    } else {
+      setRecords([]);
+    }
+  }, [session]);
+
+  const loadData = async () => {
+    setDataLoading(true);
+    try {
+      const data = await fetchSupabaseRecords();
+      setRecords(data);
+    } catch (error) {
+      alert("Failed to load records from cloud.");
+    } finally {
+      setDataLoading(false);
+    }
+  };
 
   // Theme Effect
   useEffect(() => {
@@ -63,34 +102,61 @@ const App: React.FC = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
-  const addRecord = (record: PracticeRecord) => {
-    const updated = [record, ...records];
-    setRecords(updated);
-    saveRecords(updated);
-    // Reset timer log state
-    setTimerLog(null);
-    setSuccessModalOpen(true);
-  };
-
-  const confirmDelete = () => {
-    if (deleteId) {
-      const updated = records.filter((r) => r.id !== deleteId);
-      setRecords(updated);
-      saveRecords(updated);
-      setDeleteId(null);
+  const addRecord = async (record: PracticeRecord) => {
+    // Optimistic UI update or wait for server? Let's wait for server ID
+    try {
+      const savedRecord = await addSupabaseRecord(record);
+      if (savedRecord) {
+        setRecords((prev) => [savedRecord, ...prev]);
+        setTimerLog(null);
+        setSuccessModalOpen(true);
+      }
+    } catch (e) {
+      alert("Failed to save record to cloud.");
     }
   };
 
-  const confirmClearAll = () => {
-    clearAllRecords();
-    setRecords([]);
-    setShowClearConfirm(false);
+  const confirmDelete = async () => {
+    if (deleteId) {
+      try {
+        await deleteSupabaseRecord(deleteId);
+        setRecords((prev) => prev.filter((r) => r.id !== deleteId));
+        setDeleteId(null);
+      } catch (e) {
+        alert("Failed to delete record.");
+      }
+    }
+  };
+
+  const confirmClearAll = async () => {
+    try {
+      await clearSupabaseRecords();
+      setRecords([]);
+      setShowClearConfirm(false);
+    } catch (e) {
+      alert("Failed to clear records.");
+    }
   };
 
   const handleTimerLog = (sectionId: string, minutes: number) => {
-    // We update this state, which flows down to ScoreForm
     setTimerLog({ sectionId, minutes });
   };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  if (loadingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Auth />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans pb-12 transition-colors duration-300">
@@ -108,7 +174,7 @@ const App: React.FC = () => {
                   CET-6 Recorder
                 </span>
                 <span className="ml-2 bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-[10px] px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-800 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 transition-colors">
-                  Info
+                  Cloud
                 </span>
               </button>
               <div className="hidden sm:flex space-x-2">
@@ -130,12 +196,22 @@ const App: React.FC = () => {
                       : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
                 >
-                  Statistics & History
+                  Statistics
                 </button>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500 hidden md:block">
+                {session.user.email}
+              </span>
+              <button
+                onClick={handleSignOut}
+                className="text-xs text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 px-2"
+              >
+                Sign Out
+              </button>
+              <div className="h-4 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition-colors"
@@ -201,7 +277,11 @@ const App: React.FC = () => {
       </nav>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-300">
-        {activeTab === "practice" && (
+        {dataLoading && activeTab === "statistics" && records.length === 0 ? (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : activeTab === "practice" ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in-up">
             {/* Left Column: Timer & Help */}
             <div className="lg:col-span-4 flex flex-col gap-6">
@@ -223,14 +303,14 @@ const App: React.FC = () => {
                       d="M13 10V3L4 14h7v7l9-11h-7z"
                     />
                   </svg>
-                  Pro Tip
+                  Cloud Sync Active
                 </h4>
                 <p className="text-indigo-100 text-sm leading-relaxed mb-3">
-                  Use the timer to track granular sections. Select "Reading -
-                  Careful 1", record your time, and click "Log & Reset".
+                  Your records are now synchronized across all your devices
+                  securely via Supabase.
                 </p>
                 <p className="text-xs text-indigo-200 opacity-90 border-t border-indigo-500/30 pt-3 mt-1">
-                  The time automatically syncs with the Score Form on the right.
+                  Logged in as: {session.user.email}
                 </p>
               </div>
             </div>
@@ -240,9 +320,7 @@ const App: React.FC = () => {
               <ScoreForm onSave={addRecord} incomingTimeLog={timerLog} />
             </div>
           </div>
-        )}
-
-        {activeTab === "statistics" && (
+        ) : (
           <div className="space-y-8 animate-fade-in-up">
             {/* Header with Data Actions */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-300">
@@ -311,7 +389,7 @@ const App: React.FC = () => {
       {/* Success Modal */}
       <Modal
         isOpen={successModalOpen}
-        title="Session Recorded!"
+        title="Session Synced!"
         onClose={() => setSuccessModalOpen(false)}
         type="success"
         actions={[
@@ -330,7 +408,7 @@ const App: React.FC = () => {
           },
         ]}
       >
-        Your practice session has been successfully saved to your history.
+        Your practice session has been successfully saved to the cloud.
       </Modal>
 
       {/* Delete Confirmation */}
@@ -355,7 +433,7 @@ const App: React.FC = () => {
       {/* Clear All Confirmation */}
       <Modal
         isOpen={showClearConfirm}
-        title="Clear All Data"
+        title="Clear Cloud Data"
         onClose={() => setShowClearConfirm(false)}
         type="danger"
         actions={[
@@ -371,8 +449,8 @@ const App: React.FC = () => {
           },
         ]}
       >
-        ⚠️ WARNING: This will permanently delete ALL your practice history and
-        data. Are you absolutely sure you want to continue?
+        ⚠️ WARNING: This will permanently delete ALL your practice history from
+        the database. Are you absolutely sure you want to continue?
       </Modal>
 
       {/* About SlideOver */}
@@ -406,7 +484,7 @@ const App: React.FC = () => {
                 "Granular timer for specific reading/writing sections",
                 "Normalized performance stats for split sections",
                 "Historical trend charts and data export (CSV)",
-                "Local storage privacy (data stays on your device)",
+                "Cloud Sync via Supabase",
               ].map((item, i) => (
                 <li
                   key={i}
