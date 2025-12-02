@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase, isConfigured } from '../services/supabaseClient';
 
 const Auth: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -35,6 +36,40 @@ const Auth: React.FC = () => {
       setLoading(false);
     }
   };
+
+  if (!isConfigured) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4 transition-colors">
+        <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-amber-200 dark:border-amber-900/50">
+           <div className="flex items-center gap-3 mb-4 text-amber-600 dark:text-amber-500">
+             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+             </svg>
+             <h2 className="text-xl font-bold">Configuration Required</h2>
+           </div>
+           
+           <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+             To enable Cloud Sync, you need to connect this app to your Supabase project.
+           </p>
+
+           <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-100 dark:border-gray-700 mb-6">
+             <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">How to get your keys:</h3>
+             <ol className="list-decimal list-inside text-sm text-gray-600 dark:text-gray-400 space-y-1">
+               <li>Go to your <a href="https://supabase.com/dashboard" target="_blank" className="text-indigo-600 hover:underline">Supabase Dashboard</a>.</li>
+               <li>Select your project and click <strong>Settings</strong> (cog icon).</li>
+               <li>Click on <strong>API</strong> in the sidebar.</li>
+               <li>Copy the <strong>Project URL</strong> and <strong>anon / public</strong> key.</li>
+               <li>Paste them into <code>services/supabaseClient.ts</code>.</li>
+             </ol>
+           </div>
+
+           <div className="text-center text-xs text-gray-400 dark:text-gray-500">
+             Update the code file to continue.
+           </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 p-4 transition-colors">
