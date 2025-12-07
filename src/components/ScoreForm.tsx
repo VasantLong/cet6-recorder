@@ -37,6 +37,7 @@ const RowInput: React.FC<{
   isToggleable?: boolean;
   isActive?: boolean;
   onToggle?: () => void;
+  allowDecimal?: boolean; // 新增属性
 }> = ({
   label,
   value,
@@ -49,6 +50,7 @@ const RowInput: React.FC<{
   isToggleable,
   isActive,
   onToggle,
+  allowDecimal = false, // 默认不启用小数
 }) => (
   <div className="flex items-center gap-3 py-2 border-b border-gray-50 dark:border-gray-700/50 last:border-0">
     <div className="w-32 flex-shrink-0 flex items-center gap-2">
@@ -95,6 +97,7 @@ const RowInput: React.FC<{
         </span>
         <input
           type="number"
+          step={allowDecimal ? "0.1" : "1"} // 根据allowDecimal设置step
           min="0"
           max={max}
           value={value === 0 ? "" : value}
@@ -104,8 +107,19 @@ const RowInput: React.FC<{
             let val = parseFloat(e.target.value) || 0;
             if (val < 0) val = 0;
             if (val > max) val = max;
+
+            // 根据allowDecimal决定是否保留小数
+            if (allowDecimal) {
+              // 保留一位小数
+              val = Math.round(val * 10) / 10;
+            } else {
+              // 转换为整数
+              val = Math.floor(val);
+            }
+
             onChange(val);
           }}
+          onWheel={(e) => e.currentTarget.blur()}
           className={`w-full pl-3 pr-9 py-1.5 border rounded text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
             !isToggleable || isActive
               ? "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100"
@@ -127,17 +141,21 @@ const RowInput: React.FC<{
           </span>
           <input
             type="number"
+            step="0.1"
             min="0"
             value={timeValue === 0 ? "" : timeValue}
             placeholder="0"
             disabled={isToggleable && !isActive}
             onChange={(e) => {
               if (onTimeChange) {
-                let val = parseInt(e.target.value) || 0;
+                let val = parseFloat(e.target.value) || 0;
                 if (val < 0) val = 0;
+                // 保留一位小数
+                val = Math.round(val * 10) / 10;
                 onTimeChange(val);
               }
             }}
+            onWheel={(e) => e.currentTarget.blur()}
             className={`w-full pl-3 pr-8 py-1.5 border rounded text-sm text-gray-600 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
               !isToggleable || isActive
                 ? hasError
@@ -844,6 +862,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
                 isToggleable
                 isActive={!!activeSections[SECTION_IDS.W_WRIT]}
                 onToggle={() => toggleActive(SECTION_IDS.W_WRIT)}
+                allowDecimal={true} // 启用小数
               />
               <RowInput
                 label="Translation"
@@ -856,6 +875,7 @@ const ScoreForm: React.FC<ScoreFormProps> = ({ onSave, incomingTimeLog }) => {
                 isToggleable
                 isActive={!!activeSections[SECTION_IDS.T_TRANS]}
                 onToggle={() => toggleActive(SECTION_IDS.T_TRANS)}
+                allowDecimal={true} // 启用小数
               />
             </div>
           </AccordionSection>

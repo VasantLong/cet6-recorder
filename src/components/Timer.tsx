@@ -54,7 +54,7 @@ const Timer: React.FC<TimerProps> = ({ onLogTime }) => {
 
   const logAndReset = () => {
     if (seconds === 0 || !targetSection) return;
-    const minutes = Math.ceil(seconds / 60);
+    const minutes = parseFloat((seconds / 60).toFixed(1));
     onLogTime(targetSection, minutes);
     setSeconds(0);
     setIsActive(false);
